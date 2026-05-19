@@ -71,31 +71,20 @@ pub fn print_help() {
     println!();
 
     section_header("Mods");
-    cmd("filter-mods", "Query Thunderstore API and classify each mod as:");
-    sub("server-side / both / client-only / unknown");
-    sub("(entries marked * are ignored, ** are forced as both)");
-    sub("Generates mods_list.filtered.txt and updates mods_list.txt");
-    arrow("Step 1: run this on your raw unfiltered mods_list.txt");
+    cmd("filter-mods", "Classify mods (server-side / both / client-only / unknown)");
+    sub("Queries Thunderstore API; * = ignore, ** = force as both");
+    arrow("Step 1: run on your raw mods_list.txt");
 
-    cmd("download-mods", "Download all mods listed in mods_list.txt to mods_cache/");
-    sub("Resolves the latest version via Thunderstore API (ignores");
-    sub("the version number in mods_list.txt — always fetches latest)");
-    sub("(entries marked * are skipped, ** are treated as normal)");
-    sub("Validates zip integrity; no extraction performed");
+    cmd("download-mods", "Download all mods in mods_list.txt to mods_cache/");
+    sub("Always fetches latest version from Thunderstore API");
     arrow("Step 2 (optional): pre-populate cache before install");
 
-    cmd("install-mods", "Download (if needed) and install mods listed in mods_list.txt");
-    sub("Resolves the latest version via Thunderstore API (ignores");
-    sub("the version number in mods_list.txt — always fetches latest)");
-    sub("(entries marked * are skipped, ** are treated as normal)");
-    sub("Calls download-mods internally before any extraction");
-    arrow("Step 3: installs server-side / both / unknown mods");
+    cmd("install-mods", "Download and install mods from mods_list.txt to plugins/");
+    sub("Installs server-side and both-side mods only");
+    arrow("Step 3: run after filter-mods");
 
-    cmd("clear-mods", "Full cleanup with auto world backup (5 steps):");
-    sub("· docker down if server is running");
-    sub("· backup worlds_local → config/backups/ (auto)");
-    sub("· mods_list.txt / mods_cache/ / data/ / config/bepinex/");
-    sub("· offer to restore the latest world backup");
+    cmd("clear-mods", "Full cleanup: stop server, backup worlds, remove mods");
+    arrow("Interactive — choose what to delete");
     println!();
 
     section_header("DLL Patch");
