@@ -1,11 +1,17 @@
 //! DLL patch commands: apply-patch, verify-patch.
 //!
-//! `apply-patch` copies `patches/assembly_valheim.dll` into the running
-//! container using `docker cp`, replacing the stock DLL only when the MD5
-//! checksums differ (idempotent).
+//! ## Persistence model
 //!
-//! `verify-patch` computes the MD5 of the local patch source and the DLL
-//! currently inside the container and reports whether they match.
+//! `docker cp` writes to the container's writable layer (overlay2).
+//! That layer survives `odin stop` → `odin start` and `odin restart`,
+//! but is destroyed whenever the container is recreated:
+//!   - `odin down` → `odin start`   (container removed + recreated)
+//!   - `odin update`                 (new image → container recreated)
+//!
+//! To replicate the original `PRE_SERVER_RUN_HOOK` behaviour (patch applied
+//! before every game-server start), `odin start`, `odin restart`, and
+//! `odin update` all call `run_apply` automatically when `APPLY_DLL_PATCH=true`.
+//! The MD5 idempotency check makes redundant calls free.
 
 use crate::{
     config::AppConfig,

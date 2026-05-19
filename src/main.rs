@@ -75,16 +75,34 @@ async fn dispatch(cli: Cli, config: &AppConfig) -> odin::error::Result<()> {
 
         // ── Docker server ────────────────────────────────────────────────────
         Commands::Start => {
+            commands::docker::run_start(config).await?;
+            if config.apply_dll_patch {
+                // Container is now running — apply patch before the game server
+                // process loads the DLL. Idempotent: skipped if already patched.
+                commands::patch::run_apply(config).await?;
+            }
+            Ok(())
+        }
+        Commands::Stop => commands::docker::run_stop(config).await,
+        Commands::Restart => {
+            commands::docker::run_restart(config).await?;
             if config.apply_dll_patch {
                 commands::patch::run_apply(config).await?;
             }
-            commands::docker::run_start(config).await
+            Ok(())
         }
-        Commands::Stop => commands::docker::run_stop(config).await,
-        Commands::Restart => commands::docker::run_restart(config).await,
         Commands::Down => commands::docker::run_down(config).await,
         Commands::Logs { lines } => commands::docker::run_logs(config, lines).await,
-        Commands::Update => commands::docker::run_update(config).await,
+        Commands::Update => {
+            // docker compose pull + up -d recreates the container when the image
+            // changes, destroying the writable layer and losing any prior docker cp.
+            // Re-apply the patch after the new container is running.
+            commands::docker::run_update(config).await?;
+            if config.apply_dll_patch {
+                commands::patch::run_apply(config).await?;
+            }
+            Ok(())
+        }
         Commands::Backup => commands::docker::run_backup(config).await,
         Commands::Snapshot => commands::docker::run_snapshot(config).await,
         Commands::Shell => commands::docker::run_shell(config).await,
