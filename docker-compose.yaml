@@ -1,0 +1,78 @@
+services:
+  valheim:
+    image: ghcr.io/community-valheim-tools/valheim-server:latest
+    container_name: valheim-server
+    cap_add:
+      - sys_nice
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # START/STOP EXCLUSIVELY MANUAL via odin binary
+    #
+    #   odin start   → docker compose up -d
+    #   odin stop    → graceful shutdown (2 min for world save)
+    #   odin restart → docker compose restart
+    #
+    # "no" : Docker never automatically restarts the container.
+    # Boot startup is managed by external systemd service.
+    # ─────────────────────────────────────────────────────────────────────────
+    restart: "no"
+
+    # Allow 2 min for server to save cleanly before being killed
+    stop_grace_period: 2m
+
+    ports:
+      - "2456-2457:2456-2457/udp"   # Main game ports (Steam/BepInEx)
+      - "2458:2458/udp"             # RPC mods / crossplay
+      - "9001:9001/tcp"             # Supervisor web UI (SUPERVISOR_HTTP)
+
+    volumes:
+      # ── Main volumes (structure expected by odin) ──────────────────
+      #
+      #   ./config  →  worlds_local/, backups/, bepinex/plugins/
+      #   ./data    →  steamcmd + Valheim binaries (downloaded on first boot)
+      #
+      - ./config:/config
+      - ./data:/opt/valheim
+
+      # ── Auto-restore DLL patch (read-only mounts) ─────────────────
+      #
+      #   PRE_SERVER_RUN_HOOK=/scripts/apply-patch.sh in valheim.env
+      #   Hook is executed by container before each game startup.
+      #
+      - ./patches:/patches:ro       # Patched DLL source (read-only)
+      - ./scripts:/scripts:ro       # Hook script            (read-only)
+
+    env_file:
+      - valheim.env
+
+    healthcheck:
+      test: ["CMD", "supervisorctl", "status", "valheim-server"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      # Valheim downloads ~1 GB on first startup → increased patience
+      start_period: 15m
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    deploy:
+      resources:
+        limits:
+          # ───────────────────────────────────────────────────────────────────
+          # OPTIMIZED RESOURCES FOR 4 cores / 8 GB RAM
+          #
+          # Valheim is single-threaded at ~70% → 3.5 cores sufficient;
+          # 0.5 core remains free for kernel and odin binary.
+          #
+          # RAM: Valheim idle ≈ 2.8 GB, peak with players ≈ 4–5 GB.
+          # 6.5 GB allocated → ~1.5 GB available for system.
+          # ───────────────────────────────────────────────────────────────────
+          cpus: "3.5"
+          memory: 6500m
+        reservations:
+          cpus: "1.0"
+          memory: 3g

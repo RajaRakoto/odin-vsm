@@ -1,0 +1,101 @@
+# Git ignore rules for odin-rust project
+# Note: Comments must be on separate lines to avoid breaking ignore patterns
+
+# Rust/Cargo
+/target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Environment & secrets — NEVER commit these
+.env
+.env.local
+.env.*.local
+valheim.env
+valheim.env.local
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# JetBrains (RustRover, CLion, IntelliJ)
+.idea/
+*.iml
+
+# Vim/Neovim
+*.swp
+*.swo
+Session.vim
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Helix
+.helix/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Zed
+.zed/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.Trash-*
+
+# Build & CI artefacts
+dist/
+out/
+*.log
+*.tmp
+*.bak
+*.zip
+coverage/
+lcov.info
+tarpaulin-report.html
+tarpaulin-report.json
+
+# Benchmarks
+criterion/
+
+# Documentation build output
+/doc/
+/docs/_site/
+
+# Docker (local overrides only — keep Dockerfile and compose.yml committed)
+docker-compose.override.yml
+.dockerignore.local
+
+# Miscellaneous
+*.orig
+*.rej
+.cache/
+
+# Odin server runtime data — user-specific, not part of repo
+config/
+data/
+mods_cache/
+mods_list.txt
+mods_list.filtered.txt
+scripts/
+tmp/
