@@ -98,6 +98,17 @@ pub fn print_help() {
     sub("· offer to restore the latest world backup");
     println!();
 
+    section_header("DLL Patch");
+    cmd("apply-patch", "Copy patches/assembly_valheim.dll into the container");
+    sub("Idempotent: skipped if checksums already match");
+    sub("Requires: patches/assembly_valheim.dll on the host");
+    arrow("Also runs automatically on 'odin start' when APPLY_DLL_PATCH=true");
+
+    cmd("verify-patch", "Check whether the patched DLL is active in the container");
+    sub("Compares MD5 of local patch source vs DLL inside the container");
+    arrow("Use after apply-patch to confirm the patch is in effect");
+    println!();
+
     println!("  {}", "─".repeat(52).cyan());
     println!(
         "  {} Join Game → Join IP → {}",

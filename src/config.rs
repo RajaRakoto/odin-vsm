@@ -24,6 +24,7 @@
 //! | WIN_SSH_USER          | WIN_USER             | SSH user on Windows                        |
 //! | WIN_SSH_PORT          | 22                   | SSH port on Windows                        |
 //! | WIN_SSH_KEY           | (empty)              | Absolute path to SSH private key           |
+//! | APPLY_DLL_PATCH       | false                | Auto-apply patches/assembly_valheim.dll    |
 
 use crate::error::{Error, Result};
 use std::env;
@@ -49,6 +50,7 @@ pub struct AppConfig {
     pub supervisor_http: bool,
     pub supervisor_http_pass: String,
     pub bepinex: bool,
+    pub apply_dll_patch: bool,
 
     // Windows sync
     pub win_user: String,
@@ -89,6 +91,7 @@ impl AppConfig {
             supervisor_http: parse_bool(&env::var("SUPERVISOR_HTTP").unwrap_or_default()),
             supervisor_http_pass: env::var("SUPERVISOR_HTTP_PASS").unwrap_or_default(),
             bepinex: parse_bool(&env::var("BEPINEX").unwrap_or_default()),
+            apply_dll_patch: parse_bool(&env::var("APPLY_DLL_PATCH").unwrap_or_default()),
             win_user,
             win_host: env::var("WIN_HOST").unwrap_or_default(),
             win_ssh_user,
@@ -131,6 +134,16 @@ impl AppConfig {
     /// Path to `data/`.
     pub fn data_dir(&self) -> PathBuf {
         self.script_dir.join("data")
+    }
+
+    /// Path to `patches/` (DLL patch source directory).
+    pub fn patches_dir(&self) -> PathBuf {
+        self.script_dir.join("patches")
+    }
+
+    /// Path to the patched DLL source file.
+    pub fn patch_dll_src(&self) -> PathBuf {
+        self.patches_dir().join("assembly_valheim.dll")
     }
 
     /// Windows `worlds_local` SFTP source path.

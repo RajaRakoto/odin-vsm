@@ -74,7 +74,12 @@ async fn dispatch(cli: Cli, config: &AppConfig) -> odin::error::Result<()> {
         },
 
         // ── Docker server ────────────────────────────────────────────────────
-        Commands::Start => commands::docker::run_start(config).await,
+        Commands::Start => {
+            if config.apply_dll_patch {
+                commands::patch::run_apply(config).await?;
+            }
+            commands::docker::run_start(config).await
+        }
         Commands::Stop => commands::docker::run_stop(config).await,
         Commands::Restart => commands::docker::run_restart(config).await,
         Commands::Down => commands::docker::run_down(config).await,
@@ -102,5 +107,9 @@ async fn dispatch(cli: Cli, config: &AppConfig) -> odin::error::Result<()> {
         Commands::DownloadMods => commands::mods::run_download(config).await,
         Commands::InstallMods => commands::mods::run_install(config).await,
         Commands::ClearMods => commands::mods::run_clear(config).await,
+
+        // ── DLL patch ────────────────────────────────────────────────────────
+        Commands::ApplyPatch => commands::patch::run_apply(config).await,
+        Commands::VerifyPatch => commands::patch::run_verify(config).await,
     }
 }

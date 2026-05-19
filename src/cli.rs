@@ -96,6 +96,13 @@ pub enum Commands {
 
     /// Full cleanup: docker down, world backup, interactive deletion.
     ClearMods,
+
+    // ── DLL patch ────────────────────────────────────────────────────────────
+    /// Copy patches/assembly_valheim.dll into the running container (idempotent).
+    ApplyPatch,
+
+    /// Verify whether the patched DLL is active inside the container.
+    VerifyPatch,
 }
 
 /// Sub-commands for `fix`.
@@ -154,5 +161,17 @@ mod tests {
             Commands::SyncWorlds { help_guide } => assert!(help_guide),
             _ => panic!("expected SyncWorlds"),
         }
+    }
+
+    #[test]
+    fn parse_apply_patch() {
+        let cli = Cli::try_parse_from(["odin", "apply-patch"]).unwrap();
+        assert!(matches!(cli.command, Commands::ApplyPatch));
+    }
+
+    #[test]
+    fn parse_verify_patch() {
+        let cli = Cli::try_parse_from(["odin", "verify-patch"]).unwrap();
+        assert!(matches!(cli.command, Commands::VerifyPatch));
     }
 }
