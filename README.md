@@ -20,9 +20,23 @@ Odin is a modern Rust-powered CLI built for managing Dockerized Valheim dedicate
 
 ## ⚡ Why Rust?
 
-- **Type safety** — compile-time guarantees eliminate entire classes of runtime errors
-- **Performance** — zero-cost abstractions, minimal overhead
-- **Single binary** — no runtime dependencies beyond Docker and standard Unix tools
+Odin leverages Rust's unique strengths to deliver a production-grade server manager that's both reliable and performant:
+
+- **Type safety** — compile-time guarantees eliminate entire classes of runtime errors. Odin's configuration system, API responses, and error handling are all type-checked at build time, preventing silent failures in production.
+
+- **Fearless concurrency** — async/await with Tokio enables safe, efficient parallel operations. Odin downloads mods concurrently from Thunderstore, monitors server health, and syncs worlds across networks without race conditions or deadlocks.
+
+- **Memory safety without garbage collection** — Rust's ownership model guarantees memory safety while keeping Odin lightweight and predictable. No GC pauses means reliable server management even under sustained load.
+
+- **Performance** — zero-cost abstractions and minimal overhead. Odin runs as a single, lean binary that starts instantly and uses negligible CPU/memory, ideal for always-on server orchestration.
+
+- **Single binary** — no runtime dependencies beyond Docker and standard Unix tools. Deploy Odin anywhere: bare metal, containers, or embedded systems. No Python, Node, or JVM required.
+
+- **Rich ecosystem** — Tokio (async runtime), Reqwest (HTTP client), Serde (serialization), Clap (CLI parsing). Odin uses battle-tested libraries that handle complexity so you don't have to.
+
+- **Excellent error handling** — Result types and the `?` operator make error propagation explicit and ergonomic. Server management demands reliability; Odin's error handling is unambiguous and recoverable.
+
+- **Cross-platform compilation** — build once, run on Linux, macOS, or Windows. Odin's world sync bridges Windows and Linux seamlessly, powered by Rust's portable standard library.
 
 ---
 
