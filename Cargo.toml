@@ -1,5 +1,5 @@
 [package]
-name = "odin"
+name = "odin-vsm"
 version = "1.0.0"
 edition = "2021"
 authors = ["Z3R0D4Y"]
