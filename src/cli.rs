@@ -20,6 +20,12 @@ pub struct Cli {
 /// All available sub-commands.
 #[derive(Subcommand, Debug)]
 pub enum Commands {
+    // ── Setup ─────────────────────────────────────────────────────────────────
+    /// Bootstrap a new Valheim server interactively.
+    /// Fetches the latest docker-compose.yaml and valheim.env.example from
+    /// GitHub, prompts for key values, and writes ready-to-use config files.
+    Init,
+
     // ── Diagnostic ────────────────────────────────────────────────────────────
     /// Full environment diagnostic (system, Docker, config, ports, mods, …).
     /// Recommended before first use.
@@ -118,6 +124,12 @@ pub enum FixSub {
 mod tests {
     use super::*;
     use clap::Parser;
+
+    #[test]
+    fn parse_init() {
+        let cli = Cli::try_parse_from(["odin", "init"]).unwrap();
+        assert!(matches!(cli.command, Commands::Init));
+    }
 
     #[test]
     fn parse_start() {

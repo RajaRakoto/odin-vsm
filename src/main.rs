@@ -61,7 +61,7 @@ async fn main() {
     let cli = Cli::parse();
 
     // Most commands print the banner; raw pass-throughs (logs, shell) skip it.
-    let show_banner = !matches!(cli.command, Commands::Logs { .. } | Commands::Shell);
+    let show_banner = !matches!(cli.command, Commands::Logs { .. } | Commands::Shell | Commands::Init);
     if show_banner {
         print_banner();
     }
@@ -74,6 +74,9 @@ async fn main() {
 
 async fn dispatch(cli: Cli, config: &AppConfig) -> odin::error::Result<()> {
     match cli.command {
+        // ── Setup ────────────────────────────────────────────────────────────
+        Commands::Init => commands::init::run().await,
+
         // ── Diagnostic ───────────────────────────────────────────────────────
         Commands::Health => commands::health::run(config).await,
 

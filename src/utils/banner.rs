@@ -32,6 +32,13 @@ pub fn print_help() {
     println!("  {u} ./odin {}", "<command> [options]".cyan());
     println!();
 
+    section_header("Setup");
+    cmd("init", "Bootstrap a new Valheim server interactively");
+    sub("Fetches latest docker-compose.yaml + valheim.env.example from GitHub");
+    sub("Prompts for SERVER_NAME, WORLD_NAME, SERVER_PASS, TZ, …");
+    arrow("Run once in an empty directory before first use");
+    println!();
+
     section_header("Diagnostic");
     cmd("health", "Full environment diagnostic");
     sub("Checks: system, dependencies, Docker, volumes,");
