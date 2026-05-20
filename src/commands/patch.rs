@@ -1,22 +1,25 @@
 //! DLL patch commands: apply-patch, verify-patch.
 //!
-//! ## Persistence model
+//! ## How patching works
 //!
-//! `docker cp` writes to the container's writable layer (overlay2).
-//! That layer survives `odin stop` → `odin start` and `odin restart`,
-//! but is destroyed whenever the container is recreated:
-//!   - `odin down` → `odin start`   (container removed + recreated)
-//!   - `odin update`                 (new image → container recreated)
+//! The Docker image runs `PRE_SERVER_RUN_HOOK=/scripts/apply-patch.sh` before
+//! every Valheim server start. That script reads `APPLY_DLL_PATCH` from the
+//! container environment (injected by docker-compose from `valheim.env`).
 //!
-//! To replicate the original `PRE_SERVER_RUN_HOOK` behaviour (patch applied
-//! before every game-server start), `odin start`, `odin restart`, and
-//! `odin update` all call `run_apply` automatically when `APPLY_DLL_PATCH=true`.
-//! The MD5 idempotency check makes redundant calls free.
+//! Docker only re-reads `valheim.env` on `docker compose up` (i.e. after a
+//! `down`). A plain `restart` reuses the environment of the existing container,
+//! so a change to `APPLY_DLL_PATCH` in `valheim.env` only takes effect after
+//! the container is recreated.
+//!
+//! `odin apply-patch` handles this: it reads `APPLY_DLL_PATCH` from `valheim.env`
+//! in real time, then performs `down` + `start` so the new value is injected
+//! into the fresh container. The hook will then apply or skip the patch on the
+//! next Valheim startup automatically.
 
 use crate::{
     config::AppConfig,
     error::{Error, Result},
-    utils::display::{info, ok, warn},
+    utils::display::{confirm, info, ok, warn},
 };
 use std::{
     io::Read,
@@ -29,51 +32,47 @@ const TARGET_PATH: &str =
 
 // ── Public entry points ───────────────────────────────────────────────────────
 
-/// Apply the patched DLL to the running container (idempotent).
+/// Recreate the container so docker-compose picks up the current
+/// `APPLY_DLL_PATCH` value from `valheim.env`.
+///
+/// The `PRE_SERVER_RUN_HOOK` will then apply or skip the patch automatically
+/// on the next Valheim startup — no `docker cp` needed.
 pub async fn run_apply(config: &AppConfig) -> Result<()> {
-    let src = config.patch_dll_src();
-
-    if !src.exists() {
-        return Err(Error::other(format!(
-            "Patch source not found: {}",
-            src.display()
-        )));
+    if config.apply_dll_patch {
+        let src = config.patch_dll_src();
+        if !src.exists() {
+            return Err(Error::other(format!(
+                "Patch source not found: {}. Place your patched DLL at that path first.",
+                src.display()
+            )));
+        }
+        info("APPLY_DLL_PATCH=true  ->  patch will be applied on next server start.");
+    } else {
+        info("APPLY_DLL_PATCH=false  ->  patch will be skipped on next server start.");
     }
 
-    require_container_running()?;
+    let state = crate::commands::docker::container_state(CONTAINER);
+    let container_exists = matches!(state.as_str(), "running" | "exited" | "paused");
 
-    let src_md5 = md5_local(&src)?;
-    let dst_md5 = md5_in_container(TARGET_PATH)?;
-
-    if src_md5 == dst_md5 {
-        ok("DLL already patched — checksums match, nothing to do.");
-        return Ok(());
+    if container_exists {
+        println!();
+        warn("The container must be recreated for the new APPLY_DLL_PATCH value to take effect.");
+        warn("This will run:  docker compose down  then  docker compose up -d");
+        println!();
+        if !confirm("Proceed with container recreation? (y/N)") {
+            warn("Cancelled. APPLY_DLL_PATCH change will not take effect until the container is recreated.");
+            return Ok(());
+        }
+        info("Stopping and removing the container...");
+        crate::commands::docker::compose_down()?;
     }
 
-    info(&format!("Applying patch: {} → container:{TARGET_PATH}", src.display()));
-
-    let cp_src = format!("{}:{TARGET_PATH}", CONTAINER);
-    // docker cp <local_file> <container>:<path>
-    let status = Command::new("docker")
-        .args(["cp", &src.to_string_lossy(), &cp_src])
-        .status()
-        .map_err(|e| Error::docker(format!("docker cp: {e}")))?;
-
-    if !status.success() {
-        return Err(Error::docker("docker cp failed — is the container running?"));
-    }
-
-    // Fix permissions inside the container
-    let chmod_status = Command::new("docker")
-        .args(["exec", CONTAINER, "chmod", "644", TARGET_PATH])
-        .status()
-        .map_err(|e| Error::docker(format!("docker exec chmod: {e}")))?;
-
-    if !chmod_status.success() {
-        warn("chmod 644 inside container failed — patch was copied but permissions may be wrong.");
-    }
-
-    ok("DLL patched successfully.");
+    info("Starting container with updated environment...");
+    crate::commands::docker::compose_up()?;
+    println!();
+    ok("Container started with the new APPLY_DLL_PATCH value.");
+    ok("The PRE_SERVER_RUN_HOOK will apply or skip the patch when Valheim starts.");
+    info("Monitor with:  odin logs | grep apply-patch");
     Ok(())
 }
 
@@ -91,15 +90,31 @@ pub async fn run_verify(config: &AppConfig) -> Result<()> {
     require_container_running()?;
 
     let src_md5 = md5_local(&src)?;
+    let src_size = std::fs::metadata(&src)
+        .map(|m| m.len())
+        .unwrap_or(0);
+
     let dst_md5 = md5_in_container(TARGET_PATH)?;
+    let dst_size = size_in_container(TARGET_PATH).unwrap_or(0);
 
-    info(&format!("Local  MD5 : {src_md5}"));
-    info(&format!("Remote MD5 : {dst_md5}"));
+    let sep = "------------------------------------------------------";
+    println!("{sep}");
+    println!(" Patch source   : {}", src.display());
+    println!(" MD5            : {src_md5}");
+    println!(" Size           : {src_size} bytes");
+    println!("{sep}");
+    println!(" Container target: {TARGET_PATH}");
+    println!(" MD5            : {dst_md5}");
+    println!(" Size           : {dst_size} bytes");
+    println!("{sep}");
 
-    if src_md5 == dst_md5 {
-        ok("Patch verified — DLL inside container matches the patch source.");
+    if dst_md5 == "ABSENT" {
+        warn("ABSENT - DLL not found inside the container.");
+        return Err(Error::docker("Target DLL not found in container."));
+    } else if src_md5 == dst_md5 {
+        ok("OK - DLL correctly patched.");
     } else {
-        warn("Patch NOT applied — checksums differ. Run: odin apply-patch");
+        warn("DIFF - DLL not patched or version mismatch. Run: odin apply-patch");
     }
 
     Ok(())
@@ -134,6 +149,7 @@ fn md5_local(path: &std::path::Path) -> Result<String> {
 }
 
 /// Compute MD5 of a file inside the container via `docker exec md5sum`.
+/// Returns `"ABSENT"` if the file does not exist inside the container.
 fn md5_in_container(container_path: &str) -> Result<String> {
     let out = Command::new("docker")
         .args(["exec", CONTAINER, "md5sum", container_path])
@@ -143,10 +159,7 @@ fn md5_in_container(container_path: &str) -> Result<String> {
         .map_err(|e| Error::docker(format!("docker exec md5sum: {e}")))?;
 
     if !out.status.success() {
-        let stderr = String::from_utf8_lossy(&out.stderr);
-        return Err(Error::docker(format!(
-            "md5sum inside container failed: {stderr}"
-        )));
+        return Ok("ABSENT".to_string());
     }
 
     // md5sum output: "<hash>  <path>"
@@ -156,4 +169,24 @@ fn md5_in_container(container_path: &str) -> Result<String> {
         .next()
         .map(|s| s.to_string())
         .ok_or_else(|| Error::docker("Unexpected md5sum output format"))
+}
+
+/// Get the byte size of a file inside the container via `docker exec stat`.
+fn size_in_container(container_path: &str) -> Result<u64> {
+    let out = Command::new("docker")
+        .args(["exec", CONTAINER, "stat", "-c%s", container_path])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .map_err(|e| Error::docker(format!("docker exec stat: {e}")))?;
+
+    if !out.status.success() {
+        return Ok(0);
+    }
+
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    stdout
+        .trim()
+        .parse::<u64>()
+        .map_err(|_| Error::docker("Unexpected stat output format"))
 }

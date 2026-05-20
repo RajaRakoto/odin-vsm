@@ -163,7 +163,12 @@ pub fn container_state(container: &str) -> String {
     }
 }
 
-/// Run `docker compose down` (used by clear-mods).
+/// Run `docker compose down` (used by clear-mods and apply-patch).
 pub fn compose_down() -> Result<()> {
     compose(&["down"])
+}
+
+/// Run `docker compose up -d` (used by apply-patch).
+pub fn compose_up() -> Result<()> {
+    compose(&["up", "-d"])
 }

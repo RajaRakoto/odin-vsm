@@ -88,13 +88,16 @@ pub fn print_help() {
     println!();
 
     section_header("DLL Patch");
-    cmd("apply-patch", "Copy patches/assembly_valheim.dll into the container");
-    sub("Idempotent: skipped if checksums already match");
-    sub("Requires: patches/assembly_valheim.dll on the host");
-    arrow("Also runs automatically on 'odin start' when APPLY_DLL_PATCH=true");
+    cmd("apply-patch", "Apply APPLY_DLL_PATCH change from valheim.env");
+    sub("Recreates the container (down + start) so docker-compose");
+    sub("re-reads valheim.env with the new APPLY_DLL_PATCH value.");
+    sub("The PRE_SERVER_RUN_HOOK then applies or skips the patch");
+    sub("automatically on Valheim startup.");
+    arrow("Required after every APPLY_DLL_PATCH change in valheim.env");
+    arrow("docker restart alone does NOT re-read valheim.env");
 
     cmd("verify-patch", "Check whether the patched DLL is active in the container");
-    sub("Compares MD5 of local patch source vs DLL inside the container");
+    sub("Compares MD5 + size of local patch source vs DLL inside container");
     arrow("Use after apply-patch to confirm the patch is in effect");
     println!();
 
