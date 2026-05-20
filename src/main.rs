@@ -11,11 +11,20 @@ use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() {
-    // Load valheim.env from the directory where the binary lives (or CWD).
-    let script_dir = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
-        .unwrap_or_else(|| PathBuf::from("."));
+    // Locate valheim.env: prefer the current working directory,
+    // then fall back to the directory where the binary lives.
+    let script_dir = {
+        let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+        let cwd_candidate = cwd.join("valheim.env");
+        if cwd_candidate.exists() {
+            cwd
+        } else {
+            std::env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+                .unwrap_or_else(|| PathBuf::from("."))
+        }
+    };
 
     let env_path = script_dir.join("valheim.env");
     if env_path.exists() {

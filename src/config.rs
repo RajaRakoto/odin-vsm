@@ -270,4 +270,37 @@ mod tests {
         assert_eq!(cron_human("5 * * * *"), "Every hour at minute 5");
         assert_eq!(cron_human("*/15 * * * *"), "Every 15 minutes");
     }
+
+    #[test]
+    fn env_file_with_quoted_cron_values() {
+        // This test ensures that cron values in valheim.env are properly quoted
+        // so that dotenvy can parse them without errors.
+        // Regression test for: https://github.com/Z3R0D4Y/odin-vsm/issues/XXX
+        use std::fs;
+        use std::path::PathBuf;
+
+        let test_dir = PathBuf::from("/tmp/odin_test_env");
+        let _ = fs::create_dir_all(&test_dir);
+
+        let env_content = "SERVER_NAME=\"Test Server\"\nUPDATE_CRON=\"30 * * * *\"\nRESTART_CRON=\"30 4 * * *\"\nBACKUPS_CRON=\"5 * * * *\"\nAPPLY_DLL_PATCH=true\n";
+
+        let env_file = test_dir.join("valheim.env");
+        fs::write(&env_file, env_content).expect("Failed to write test env file");
+
+        // This should not panic or fail
+        let result = dotenvy::from_path_override(&env_file);
+        assert!(
+            result.is_ok(),
+            "Failed to parse env file with quoted cron values: {:?}",
+            result
+        );
+
+        // Verify that APPLY_DLL_PATCH was loaded
+        let apply_dll = std::env::var("APPLY_DLL_PATCH").unwrap_or_default();
+        assert_eq!(apply_dll, "true", "APPLY_DLL_PATCH should be loaded as 'true'");
+
+        // Cleanup
+        let _ = fs::remove_file(&env_file);
+        let _ = fs::remove_dir(&test_dir);
+    }
 }
