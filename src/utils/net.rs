@@ -9,7 +9,11 @@ pub fn internal_ips() -> String {
         Ok(o) => {
             let s = String::from_utf8_lossy(&o.stdout);
             let trimmed = s.trim().to_string();
-            if trimmed.is_empty() { "N/A".into() } else { trimmed }
+            if trimmed.is_empty() {
+                "N/A".into()
+            } else {
+                trimmed
+            }
         }
         Err(_) => "N/A".into(),
     }

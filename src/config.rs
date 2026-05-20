@@ -169,12 +169,20 @@ pub fn parse_bool(s: &str) -> bool {
 
 /// Human-readable label for a bool: Enabled / Disabled.
 pub fn bool_label(b: bool) -> &'static str {
-    if b { "Enabled" } else { "Disabled" }
+    if b {
+        "Enabled"
+    } else {
+        "Disabled"
+    }
 }
 
 /// Human-readable label for a bool: On / Off.
 pub fn bool_onoff(b: bool) -> &'static str {
-    if b { "On" } else { "Off" }
+    if b {
+        "On"
+    } else {
+        "Off"
+    }
 }
 
 /// Translate a cron expression into human-readable text.
@@ -224,8 +232,7 @@ pub fn cron_human(cron: &str) -> String {
 
     // N H * * D  → Every <day> at HH:MM
     if dom == "*" && mon == "*" {
-        if let (Ok(m), Ok(h), Ok(d)) =
-            (min.parse::<u32>(), hr.parse::<u32>(), dow.parse::<usize>())
+        if let (Ok(m), Ok(h), Ok(d)) = (min.parse::<u32>(), hr.parse::<u32>(), dow.parse::<usize>())
         {
             let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
             let day_name = days.get(d).copied().unwrap_or("day");
@@ -235,9 +242,7 @@ pub fn cron_human(cron: &str) -> String {
 
     // N H D M *  → Monthly on day D at HH:MM
     if dow == "*" {
-        if let (Ok(m), Ok(h), Ok(d)) =
-            (min.parse::<u32>(), hr.parse::<u32>(), dom.parse::<u32>())
-        {
+        if let (Ok(m), Ok(h), Ok(d)) = (min.parse::<u32>(), hr.parse::<u32>(), dom.parse::<u32>()) {
             return format!("Monthly on day {} at {:02}:{:02}", d, h, m);
         }
     }
@@ -297,7 +302,10 @@ mod tests {
 
         // Verify that APPLY_DLL_PATCH was loaded
         let apply_dll = std::env::var("APPLY_DLL_PATCH").unwrap_or_default();
-        assert_eq!(apply_dll, "true", "APPLY_DLL_PATCH should be loaded as 'true'");
+        assert_eq!(
+            apply_dll, "true",
+            "APPLY_DLL_PATCH should be loaded as 'true'"
+        );
 
         // Cleanup
         let _ = fs::remove_file(&env_file);

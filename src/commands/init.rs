@@ -107,9 +107,7 @@ async fn fetch_text(client: &reqwest::Client, url: &str) -> Result<String> {
         )));
     }
 
-    resp.text()
-        .await
-        .map_err(|e| Error::network(e.to_string()))
+    resp.text().await.map_err(|e| Error::network(e.to_string()))
 }
 
 async fn fetch_bytes(client: &reqwest::Client, url: &str) -> Result<bytes::Bytes> {
@@ -154,8 +152,7 @@ async fn fetch_scripts(client: &reqwest::Client, dest: &Path) -> Result<Vec<Stri
         .await
         .map_err(|e| Error::network(format!("GitHub API parse: {e}")))?;
 
-    fs::create_dir_all(dest)
-        .map_err(|e| Error::other(format!("Cannot create scripts/: {e}")))?;
+    fs::create_dir_all(dest).map_err(|e| Error::other(format!("Cannot create scripts/: {e}")))?;
 
     let mut written = Vec::new();
 
@@ -261,10 +258,7 @@ pub async fn run() -> Result<()> {
     );
     println!("  {}", "─".repeat(44).cyan());
     println!();
-    println!(
-        "  {} Fetching latest files from GitHub…",
-        "→".cyan()
-    );
+    println!("  {} Fetching latest files from GitHub…", "→".cyan());
 
     let client = build_client().await?;
 
@@ -313,33 +307,42 @@ pub async fn run() -> Result<()> {
     let detected_tz = detect_timezone();
 
     // ── Interactive prompts ───────────────────────────────────────────────────
-    println!("  {}", "── Server Identity ──────────────────────────".bold());
+    println!(
+        "  {}",
+        "── Server Identity ──────────────────────────".bold()
+    );
     println!();
 
     let server_name = prompt_str("  Server name (shown in browser)", "My Valheim Server")?;
     let world_name = prompt_str("  World name (save file, no extension)", "Dedicated")?;
 
     println!();
-    println!("  {}", "Server password must be at least 5 characters.".dimmed());
+    println!(
+        "  {}",
+        "Server password must be at least 5 characters.".dimmed()
+    );
     let server_pass = loop {
         let p = prompt_password("  Server password")?;
         if p.len() >= 5 {
             break p;
         }
-        println!(
-            "  {} Password too short (minimum 5 characters).",
-            "✘".red()
-        );
+        println!("  {} Password too short (minimum 5 characters).", "✘".red());
     };
 
     println!();
-    println!("  {}", "── Timezone ─────────────────────────────────".bold());
+    println!(
+        "  {}",
+        "── Timezone ─────────────────────────────────".bold()
+    );
     println!();
     println!("  {} Detected: {}", "→".cyan(), detected_tz.cyan());
     let tz = prompt_str("  Timezone (tz database name)", &detected_tz)?;
 
     println!();
-    println!("  {}", "── Optional: Windows World Sync ─────────────".bold());
+    println!(
+        "  {}",
+        "── Optional: Windows World Sync ─────────────".bold()
+    );
     println!();
     let setup_win_sync = prompt_confirm(
         "  Configure Windows → Linux world sync (odin sync-worlds)?",
@@ -358,10 +361,8 @@ pub async fn run() -> Result<()> {
 
     // ── Build values map ──────────────────────────────────────────────────────
     let defaults = static_defaults();
-    let mut values: HashMap<&str, String> = defaults
-        .iter()
-        .map(|(&k, &v)| (k, v.to_string()))
-        .collect();
+    let mut values: HashMap<&str, String> =
+        defaults.iter().map(|(&k, &v)| (k, v.to_string())).collect();
 
     values.insert("SERVER_NAME", server_name);
     values.insert("WORLD_NAME", world_name);
@@ -380,10 +381,7 @@ pub async fn run() -> Result<()> {
 
     // ── Fetch and write scripts/ ──────────────────────────────────────────────
     println!();
-    println!(
-        "  {} Fetching scripts/ from GitHub…",
-        "→".cyan()
-    );
+    println!("  {} Fetching scripts/ from GitHub…", "→".cyan());
 
     let script_files = fetch_scripts(&client, &scripts_dest).await?;
     for name in &script_files {
@@ -405,19 +403,16 @@ pub async fn run() -> Result<()> {
     println!();
     println!("  Next steps:");
     println!(
-        "    {}  {}",
-        "1.".cyan(),
-        "Review valheim.env and adjust any remaining values."
+        "    {}  Review valheim.env and adjust any remaining values.",
+        "1.".cyan()
     );
     println!(
-        "    {}  {}",
-        "2.".cyan(),
-        "Run `odin health` to verify your environment."
+        "    {}  Run `odin health` to verify your environment.",
+        "2.".cyan()
     );
     println!(
-        "    {}  {}",
-        "3.".cyan(),
-        "Run `odin start` to launch the server."
+        "    {}  Run `odin start` to launch the server.",
+        "3.".cyan()
     );
     println!();
 

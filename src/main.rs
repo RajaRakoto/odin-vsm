@@ -61,7 +61,10 @@ async fn main() {
     let cli = Cli::parse();
 
     // Most commands print the banner; raw pass-throughs (logs, shell) skip it.
-    let show_banner = !matches!(cli.command, Commands::Logs { .. } | Commands::Shell | Commands::Init);
+    let show_banner = !matches!(
+        cli.command,
+        Commands::Logs { .. } | Commands::Shell | Commands::Init
+    );
     if show_banner {
         print_banner();
     }
@@ -105,9 +108,7 @@ async fn dispatch(cli: Cli, config: &AppConfig) -> odin::error::Result<()> {
 
         // ── Worlds ───────────────────────────────────────────────────────────
         Commands::RestoreWorlds => commands::worlds::run_restore(config).await,
-        Commands::SyncWorlds { help_guide } => {
-            commands::worlds::run_sync(config, help_guide).await
-        }
+        Commands::SyncWorlds { help_guide } => commands::worlds::run_sync(config, help_guide).await,
 
         // ── Mods ─────────────────────────────────────────────────────────────
         Commands::FilterMods => commands::mods::run_filter(config).await,

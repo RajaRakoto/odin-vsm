@@ -27,8 +27,7 @@ use std::{
 };
 
 const CONTAINER: &str = "valheim-server";
-const TARGET_PATH: &str =
-    "/opt/valheim/server/valheim_server_Data/Managed/assembly_valheim.dll";
+const TARGET_PATH: &str = "/opt/valheim/server/valheim_server_Data/Managed/assembly_valheim.dll";
 
 // ── Public entry points ───────────────────────────────────────────────────────
 
@@ -90,9 +89,7 @@ pub async fn run_verify(config: &AppConfig) -> Result<()> {
     require_container_running()?;
 
     let src_md5 = md5_local(&src)?;
-    let src_size = std::fs::metadata(&src)
-        .map(|m| m.len())
-        .unwrap_or(0);
+    let src_size = std::fs::metadata(&src).map(|m| m.len()).unwrap_or(0);
 
     let dst_md5 = md5_in_container(TARGET_PATH)?;
     let dst_size = size_in_container(TARGET_PATH).unwrap_or(0);

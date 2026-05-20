@@ -41,7 +41,12 @@ pub async fn run(config: &AppConfig, show_passwords: bool) -> Result<()> {
         "*".repeat(config.server_pass.len())
     };
     let display_sup_pass = if show_passwords {
-        config.supervisor_http_pass.clone().yellow().bold().to_string()
+        config
+            .supervisor_http_pass
+            .clone()
+            .yellow()
+            .bold()
+            .to_string()
     } else {
         "*".repeat(config.supervisor_http_pass.len())
     };

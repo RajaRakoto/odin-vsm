@@ -56,7 +56,11 @@ pub async fn run_restore(config: &AppConfig) -> Result<()> {
     separator_n(sep);
 
     for (i, f) in files.iter().enumerate() {
-        let bname = f.file_name().unwrap_or_default().to_string_lossy().to_string();
+        let bname = f
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
         let bdate = file_mtime_str(f);
         let num = i + 1;
         if i == latest_idx {
@@ -65,7 +69,10 @@ pub async fn run_restore(config: &AppConfig) -> Result<()> {
                 num, bname, bdate
             );
         } else {
-            println!("  \x1b[0;36m{:2})\x1b[0m  {:<38}  \x1b[0;36m{}\x1b[0m", num, bname, bdate);
+            println!(
+                "  \x1b[0;36m{:2})\x1b[0m  {:<38}  \x1b[0;36m{}\x1b[0m",
+                num, bname, bdate
+            );
         }
     }
 
@@ -89,7 +96,11 @@ pub async fn run_restore(config: &AppConfig) -> Result<()> {
     }
 
     let chosen = &files[selection - 1];
-    let chosen_name = chosen.file_name().unwrap_or_default().to_string_lossy().to_string();
+    let chosen_name = chosen
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
     let chosen_date = file_mtime_str(chosen);
 
     println!();
@@ -106,10 +117,16 @@ pub async fn run_restore(config: &AppConfig) -> Result<()> {
     extract_backup(chosen, &worlds_local)?;
 
     println!();
-    ok(&format!("World restored successfully from {}.", chosen_name.bold()));
+    ok(&format!(
+        "World restored successfully from {}.",
+        chosen_name.bold()
+    ));
     ok("Your Valheim progress has been restored.");
     println!();
-    println!("  \x1b[1;33m▶  Next step:\x1b[0m Run {} to launch the server.", "odin start".bold());
+    println!(
+        "  \x1b[1;33m▶  Next step:\x1b[0m Run {} to launch the server.",
+        "odin start".bold()
+    );
     Ok(())
 }
 
@@ -133,10 +150,22 @@ pub async fn run_sync(config: &AppConfig, help_guide: bool) -> Result<()> {
 
     println!();
     info(&format!("Windows host    : {}", config.win_host));
-    info(&format!("SSH user         : {}  (port {})", config.win_ssh_user, config.win_ssh_port));
-    info(&format!("SSH key          : {}", config.win_ssh_key.display()));
-    info(&format!("Source (Windows) : {}", config.worlds_src_remote()));
-    info(&format!("Destination      : {}", config.worlds_local_dir().display()));
+    info(&format!(
+        "SSH user         : {}  (port {})",
+        config.win_ssh_user, config.win_ssh_port
+    ));
+    info(&format!(
+        "SSH key          : {}",
+        config.win_ssh_key.display()
+    ));
+    info(&format!(
+        "Source (Windows) : {}",
+        config.worlds_src_remote()
+    ));
+    info(&format!(
+        "Destination      : {}",
+        config.worlds_local_dir().display()
+    ));
     println!();
 
     section("Pre-flight checks");
@@ -166,7 +195,9 @@ pub async fn run_sync(config: &AppConfig, help_guide: bool) -> Result<()> {
     println!("  \x1b[1mPre-flight checks passed.  The server is ready to receive the sync.\x1b[0m");
     println!();
 
-    if !confirm("\x1b[0;31m\x1b[1mProceed with destructive sync? This cannot be undone. [y/N]\x1b[0m") {
+    if !confirm(
+        "\x1b[0;31m\x1b[1mProceed with destructive sync? This cannot be undone. [y/N]\x1b[0m",
+    ) {
         warn("Sync cancelled by user.");
         return Ok(());
     }
@@ -211,7 +242,10 @@ pub async fn run_sync(config: &AppConfig, help_guide: bool) -> Result<()> {
     }
     ok("Sync complete — server worlds_local is now an exact mirror of Windows.");
     println!();
-    info(&format!("You can start the server with:  {}", "odin start".bold()));
+    info(&format!(
+        "You can start the server with:  {}",
+        "odin start".bold()
+    ));
     println!();
     Ok(())
 }
@@ -222,18 +256,25 @@ pub async fn run_sync(config: &AppConfig, help_guide: bool) -> Result<()> {
 
 fn extract_backup(src: &Path, dst: &Path) -> Result<()> {
     if dst.exists() {
-        fs::remove_dir_all(dst).map_err(|e| {
-            Error::other(format!("Failed to remove {}: {e}", dst.display()))
-        })?;
+        fs::remove_dir_all(dst)
+            .map_err(|e| Error::other(format!("Failed to remove {}: {e}", dst.display())))?;
         info("Removed existing worlds_local.");
     }
-    fs::create_dir_all(dst).map_err(|e| {
-        Error::other(format!("Failed to create {}: {e}", dst.display()))
-    })?;
-    info(&format!("Extracting {} → {}…", src.display(), dst.display()));
+    fs::create_dir_all(dst)
+        .map_err(|e| Error::other(format!("Failed to create {}: {e}", dst.display())))?;
+    info(&format!(
+        "Extracting {} → {}…",
+        src.display(),
+        dst.display()
+    ));
 
     let status = Command::new("7z")
-        .args(["x", &src.to_string_lossy(), &format!("-o{}", dst.display()), "-y"])
+        .args([
+            "x",
+            &src.to_string_lossy(),
+            &format!("-o{}", dst.display()),
+            "-y",
+        ])
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .status()
@@ -278,7 +319,10 @@ fn check_sync_env(config: &AppConfig) -> Result<()> {
         ok_flag = false;
     }
     if !config.win_ssh_key.as_os_str().is_empty() && !config.win_ssh_key.exists() {
-        err(&format!("SSH private key not found: {}", config.win_ssh_key.display()));
+        err(&format!(
+            "SSH private key not found: {}",
+            config.win_ssh_key.display()
+        ));
         ok_flag = false;
     }
 
@@ -336,11 +380,16 @@ fn check_client_files_unlocked(config: &AppConfig) -> Result<()> {
     let key_str = config.win_ssh_key.to_string_lossy().to_string();
 
     let ssh_opts: &[&str] = &[
-        "-o", "BatchMode=yes",
-        "-o", "ConnectTimeout=10",
-        "-o", "StrictHostKeyChecking=accept-new",
-        "-p", &port_str,
-        "-i", &key_str,
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "-o",
+        "StrictHostKeyChecking=accept-new",
+        "-p",
+        &port_str,
+        "-i",
+        &key_str,
     ];
 
     let remote = format!("{}@{}", config.win_ssh_user, config.win_host);
@@ -377,7 +426,9 @@ fn print_sync_guide() {
     println!("  \x1b[1;36m── Required tools ───────────────────────────────────────────\x1b[0m");
     println!("    \x1b[0;36mrclone\x1b[0m       File transfer over SFTP");
     println!("    \x1b[0;36mtailscale\x1b[0m    Encrypted VPN tunnel");
-    println!("    \x1b[0;36mssh\x1b[0m          Pre-flight check: verifies Valheim.exe is not running");
+    println!(
+        "    \x1b[0;36mssh\x1b[0m          Pre-flight check: verifies Valheim.exe is not running"
+    );
     println!();
     println!("  \x1b[1;36m── Required variables in valheim.env ────────────────────────\x1b[0m");
     println!("    \x1b[0;36mWIN_USER\x1b[0m       Windows account name");
@@ -392,6 +443,8 @@ fn print_sync_guide() {
     println!("    \x1b[1;33m3.\x1b[0m  \x1b[0;36modin sync-worlds\x1b[0m  ← destructive");
     println!("    \x1b[1;33m4.\x1b[0m  \x1b[0;36modin start\x1b[0m");
     println!();
-    println!("  \x1b[0;31m⚠  The server destination is overwritten and extra files are deleted.\x1b[0m");
+    println!(
+        "  \x1b[0;31m⚠  The server destination is overwritten and extra files are deleted.\x1b[0m"
+    );
     println!();
 }

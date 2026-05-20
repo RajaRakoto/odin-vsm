@@ -16,9 +16,11 @@ pub fn env_get(path: &Path, key: &str, default: &str) -> String {
             }
             if let Some(rest) = trimmed.strip_prefix(&format!("{key}=")) {
                 // Strip inline comment and surrounding whitespace
-                let val = rest.split(" #")
+                let val = rest
+                    .split(" #")
                     .next()
-                    .unwrap_or(rest).split("\t#")
+                    .unwrap_or(rest)
+                    .split("\t#")
                     .next()
                     .unwrap_or(rest)
                     .trim();

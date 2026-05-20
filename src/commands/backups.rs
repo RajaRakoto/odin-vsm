@@ -17,7 +17,10 @@ pub async fn run_clear(config: &AppConfig) -> Result<()> {
     println!();
 
     if !backups_dir.exists() {
-        warn(&format!("Backup directory not found: {}", backups_dir.display()));
+        warn(&format!(
+            "Backup directory not found: {}",
+            backups_dir.display()
+        ));
         warn("Nothing to delete.");
         return Ok(());
     }
@@ -56,11 +59,10 @@ pub async fn run_clear(config: &AppConfig) -> Result<()> {
 
     separator_n(44);
     println!(
-        "  \x1b[1;33m⚠  This will permanently delete {} file(s).\x1b[0m", total
+        "  \x1b[1;33m⚠  This will permanently delete {} file(s).\x1b[0m",
+        total
     );
-    println!(
-        "  \x1b[1;33m   The config/backups/ directory itself will be preserved.\x1b[0m"
-    );
+    println!("  \x1b[1;33m   The config/backups/ directory itself will be preserved.\x1b[0m");
     println!();
 
     if !crate::utils::display::confirm(&format!(
@@ -77,7 +79,11 @@ pub async fn run_clear(config: &AppConfig) -> Result<()> {
     let mut failed = 0usize;
 
     for f in &files {
-        let fname = f.file_name().unwrap_or_default().to_string_lossy().to_string();
+        let fname = f
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
         match fs::remove_file(f) {
             Ok(_) => {
                 ok(&format!("Deleted: {fname}"));
@@ -94,9 +100,14 @@ pub async fn run_clear(config: &AppConfig) -> Result<()> {
     separator_n(44);
     if failed == 0 {
         ok(&format!("{deleted} backup(s) deleted successfully."));
-        ok(&format!("Directory {} is now empty.", backups_dir.display()));
+        ok(&format!(
+            "Directory {} is now empty.",
+            backups_dir.display()
+        ));
     } else {
-        warn(&format!("{deleted} deleted, {failed} failed. Check permissions."));
+        warn(&format!(
+            "{deleted} deleted, {failed} failed. Check permissions."
+        ));
     }
     separator_n(44);
     Ok(())

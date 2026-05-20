@@ -102,11 +102,19 @@ pub async fn run_backup(_config: &AppConfig) -> Result<()> {
     require_docker()?;
     info("Triggering a manual backup…");
     let status = Command::new("docker")
-        .args(["exec", CONTAINER, "supervisorctl", "restart", "valheim-backup"])
+        .args([
+            "exec",
+            CONTAINER,
+            "supervisorctl",
+            "restart",
+            "valheim-backup",
+        ])
         .status()
         .map_err(|e| crate::error::Error::docker(e.to_string()))?;
     if !status.success() {
-        return Err(crate::error::Error::docker("supervisorctl restart valheim-backup failed"));
+        return Err(crate::error::Error::docker(
+            "supervisorctl restart valheim-backup failed",
+        ));
     }
     ok("Backup in progress — result in config/backups/");
     Ok(())
@@ -119,7 +127,16 @@ pub async fn run_snapshot(config: &AppConfig) -> Result<()> {
 
     let script_dir = config.script_dir.to_string_lossy().to_string();
     let status = Command::new("zip")
-        .args(["-0", "-r", &archive, ".", "--exclude", "*.log", "--exclude", ".git/*"])
+        .args([
+            "-0",
+            "-r",
+            &archive,
+            ".",
+            "--exclude",
+            "*.log",
+            "--exclude",
+            ".git/*",
+        ])
         .current_dir(&script_dir)
         .status()
         .map_err(|e| crate::error::Error::other(format!("zip: {e}")))?;
@@ -156,9 +173,7 @@ pub fn container_state(container: &str) -> String {
         .args(["inspect", "--format", "{{.State.Status}}", container])
         .output();
     match out {
-        Ok(o) if o.status.success() => {
-            String::from_utf8_lossy(&o.stdout).trim().to_string()
-        }
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).trim().to_string(),
         _ => "absent".to_string(),
     }
 }
