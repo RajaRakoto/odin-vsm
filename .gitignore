@@ -99,6 +99,5 @@ data/
 mods_cache/
 mods_list.txt
 mods_list.filtered.txt
-scripts/
 tmp/
 test/
