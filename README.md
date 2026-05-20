@@ -87,29 +87,51 @@ source ~/.cargo/env
 
 ## 🚀 Installation
 
-### Option A — Build from source
+### Option A — cargo install (recommended)
 
 ```bash
-git clone https://github.com/yourorg/odin-valheim.git && cd odin-valheim
-cargo build --release
-cp target/release/odin /srv/valheim/odin
-cp valheim.env.example /srv/valheim/valheim.env
-cd /srv/valheim && ./odin health
+cargo install odin
+mkdir -p /srv/valheim && cd /srv/valheim
+odin init        # interactive wizard — fetches all config files from GitHub
+odin health      # verify environment before first start
 ```
 
-### Option B — Direct binary deploy
+### Option B — Download binary from GitHub Releases
+
+Download the pre-built binary for your platform from the [Releases page](https://github.com/RajaRakoto/odin-vsm/releases), then:
+
+```bash
+chmod +x odin-linux-x86_64
+mv odin-linux-x86_64 /srv/valheim/odin
+cd /srv/valheim
+./odin init      # interactive wizard — fetches all config files from GitHub
+./odin health
+```
+
+### Option C — Build from source
+
+```bash
+git clone https://github.com/RajaRakoto/odin-vsm.git && cd odin-vsm
+cargo build --release
+cp target/release/odin /srv/valheim/odin
+cd /srv/valheim
+./odin init
+```
+
+### What `odin init` sets up
 
 ```
 /srv/valheim/
-├── docker-compose.yml
-├── odin              ← binary
-├── valheim.env       ← your configuration
-├── config/           ← created automatically
+├── docker-compose.yaml   ← fetched from GitHub (latest)
+├── odin                  ← binary
+├── valheim.env           ← generated from valheim.env.example + your answers
+├── scripts/              ← fetched from GitHub (apply-patch.sh + any future scripts)
+├── config/               ← created automatically on first start
 │   ├── backups/
 │   ├── worlds_local/
 │   └── bepinex/plugins/
-├── data/             ← created automatically (steamcmd)
-└── mods_list.txt     ← optional
+├── data/                 ← created automatically (steamcmd + Valheim binaries)
+└── mods_list.txt         ← optional
 ```
 
 > `odin` looks for `valheim.env` next to the binary, falling back to the working directory.
@@ -171,6 +193,14 @@ Copy `valheim.env.example` to `valheim.env` and edit it.
 ## 💻 CLI commands
 
 Run `./odin` with no arguments to see the full command guide.
+
+### 🚀 Setup
+
+```bash
+odin init            # interactive wizard: fetch config from GitHub + generate valheim.env
+```
+
+Prompts for `SERVER_NAME`, `WORLD_NAME`, `SERVER_PASS`, `TZ` (auto-detected), and optional Windows sync config. Fetches `docker-compose.yaml`, `valheim.env.example`, and the full `scripts/` directory from GitHub at runtime so you always get the latest defaults.
 
 ### 🩺 Diagnostic
 
@@ -333,6 +363,7 @@ src/
 │   ├── docker.rs     — start / stop / restart / down / logs / update / shell
 │   ├── fix.rs        — fix permission
 │   ├── health.rs     — health diagnostic
+│   ├── init.rs       — init wizard (fetch config + scripts from GitHub)
 │   ├── mods.rs       — filter / download / install / clear mods
 │   ├── patch.rs      — apply-patch / verify-patch
 │   ├── status.rs     — status / status-password
