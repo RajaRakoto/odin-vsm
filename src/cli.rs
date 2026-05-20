@@ -8,8 +8,8 @@ use clap::{Parser, Subcommand};
 #[derive(Parser, Debug)]
 #[command(
     name = "odin",
-    version = "1.0.0",
-    author = "Z3R0D4Y",
+    version,
+    author,
     about = "Valheim Server Manager — manage your Dockerized Valheim server"
 )]
 pub struct Cli {
