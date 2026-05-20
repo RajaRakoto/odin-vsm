@@ -7,7 +7,7 @@ use crate::{
     error::{Error, Result},
     utils::{
         display::{confirm, err, info, ok, section, separator_n, warn},
-        fs::{file_mtime_str, sudo_mkdir_p, sudo_rm_rf},
+        fs::{file_mtime_str, sudo_mkdir_p},
     },
 };
 use colored::Colorize;
@@ -222,10 +222,14 @@ pub async fn run_sync(config: &AppConfig, help_guide: bool) -> Result<()> {
 
 fn extract_backup(src: &Path, dst: &Path) -> Result<()> {
     if dst.exists() {
-        sudo_rm_rf(dst)?;
+        fs::remove_dir_all(dst).map_err(|e| {
+            Error::other(format!("Failed to remove {}: {e}", dst.display()))
+        })?;
         info("Removed existing worlds_local.");
     }
-    sudo_mkdir_p(dst)?;
+    fs::create_dir_all(dst).map_err(|e| {
+        Error::other(format!("Failed to create {}: {e}", dst.display()))
+    })?;
     info(&format!("Extracting {} → {}…", src.display(), dst.display()));
 
     let status = Command::new("7z")
