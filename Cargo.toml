@@ -9,7 +9,7 @@ repository = "https://github.com/RajaRakoto/odin-vsm"
 homepage = "https://github.com/RajaRakoto/odin-vsm"
 documentation = "https://github.com/RajaRakoto/odin-vsm#readme"
 readme = "README.md"
-keywords = ["valheim", "server", "manager", "rust", "docker", "cli", "gaming", "bepinex", "valheim+", "mods", "thunderstore-api", "sync", "backup", "automation"]
+keywords = ["valheim", "server", "manager", "rust", "automation"]
 categories = ["command-line-utilities", "games"]
 exclude = [
     "data/",
