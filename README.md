@@ -1,6 +1,21 @@
-# 🛡️ odin — Valheim Server Manager
+# ODIN — Valheim Server Manager
 
 Odin is a modern Rust-powered CLI built for managing Dockerized Valheim dedicated servers with reliability, performance, and simplicity in mind. Designed around type-safe configuration, asynchronous mod downloads via the Thunderstore API, and structured error handling, it delivers a seamless server management experience through a single, dependency-free binary. From server lifecycle automation and BepInEx mod management to cross-platform world synchronization between Windows and Linux using rclone and Tailscale, Odin handles the infrastructure complexity so you can stay focused on the game.
+
+## Features
+
+* 🚀 **Server Lifecycle** — start, stop, restart, update, and manage containers with a single command
+* 🧩 **Mod Management** — classify, download, and install mods from Thunderstore with automatic dependency resolution
+* 🌍 **World Sync** — seamless cross-platform world synchronization between Windows and Linux via SSH/rclone
+* 💾 **Automated Backups** — scheduled world snapshots with restore capabilities and manual backup support
+* 🩺 **Health Diagnostics** — comprehensive system, Docker, and configuration validation before first use
+* 📊 **Monitoring & Logs** — real-time server status, log streaming, and interactive shell access
+* 🛠️ **DLL Patching** — apply and verify assembly patches with toggle control via environment variables
+* ⏰ **Scheduled Tasks** — cron-based automation for updates, restarts, and backups
+* 🔌 **BepInEx & Valheim+** — full mod loader support with mutually exclusive configuration
+* 🎮 **Crossplay Support** — Xbox and Game Pass crossplay enablement
+* 🧪 **Type-Safe Config** — compile-time validated configuration with sensible defaults
+* 📦 **Single Binary** — zero runtime dependencies beyond Docker and standard Unix tools
 
 ## Table of contents
 
