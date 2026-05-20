@@ -137,7 +137,8 @@ Copy `valheim.env.example` to `valheim.env` and edit it.
 | `SUPERVISOR_HTTP` | `false` | Supervisor web UI on port 9001 |
 | `BEPINEX` | `false` | BepInEx mod loader |
 | `VALHEIM_PLUS` | `false` | Valheim+ *(mutually exclusive with BepInEx)* |
-| `APPLY_DLL_PATCH` | `false` | Auto-apply `patches/assembly_valheim.dll` on start |
+| `APPLY_DLL_PATCH` | `false` | Enable/disable DLL patching — the hook always runs, the script exits early when `false` |
+| `PRE_SERVER_RUN_HOOK` | `/scripts/apply-patch.sh` | Fixed hook — do not change; controls patch execution via `APPLY_DLL_PATCH` |
 | `PUID` / `PGID` | `1000` | UID/GID owning `./data` and `./config` |
 
 ### Windows sync *(optional)*
@@ -209,11 +210,23 @@ odin sync-worlds                # ⚠ destructive — overwrites server worlds
 ### 🩹 DLL Patch
 
 ```bash
-odin apply-patch     # copy patches/assembly_valheim.dll into the container (idempotent)
-odin verify-patch    # verify the patched DLL is active inside the container
+odin apply-patch     # apply APPLY_DLL_PATCH change from valheim.env (recreates container)
+odin verify-patch    # verify the patched DLL is active -- shows MD5 + file sizes
 ```
 
-> When `APPLY_DLL_PATCH=true`, the patch runs automatically on `odin start`, `odin restart`, and `odin update`.
+> `APPLY_DLL_PATCH` is the only toggle — set it to `true` or `false` in `valheim.env`.
+>
+> **Important Docker behaviour:** `odin restart` reuses the existing container environment.
+> A change to `APPLY_DLL_PATCH` in `valheim.env` is only picked up after the container
+> is recreated (`down` + `start`). Run `odin apply-patch` to do this automatically:
+> it reads the current value from `valheim.env`, confirms with you, then runs
+> `docker compose down` + `docker compose up -d`.
+>
+> Once the fresh container starts, `PRE_SERVER_RUN_HOOK=/scripts/apply-patch.sh` runs
+> before every Valheim startup and applies or skips the patch based on `APPLY_DLL_PATCH`.
+>
+> Requires `./patches/assembly_valheim.dll` and `./scripts/apply-patch.sh` (both
+> mounted read-only in `docker-compose.yaml`).
 
 ### Fixes
 
@@ -353,6 +366,8 @@ zfs set quota=500G <pool/dataset>
 **Mods not loading after `install-mods`** — confirm `BEPINEX=true`, check `config/bepinex/plugins/` is non-empty, then `odin restart`.
 
 **`sync-worlds` SSH refused** — confirm OpenSSH Server is running on Windows and Tailscale is active on both machines.
+
+**DLL patch not taking effect after changing `APPLY_DLL_PATCH`** — `odin restart` does not re-read `valheim.env`. Run `odin apply-patch` to recreate the container with the new value. Use `odin verify-patch` to confirm.
 
 ---
 
