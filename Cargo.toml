@@ -1,6 +1,6 @@
 [package]
 name = "odin"
-version = "1.0.0"
+version = "1.0.2"
 edition = "2021"
 authors = ["Z3R0D4Y"]
 description = "Manage your Valheim dedicated server with confidence — a fast, single-binary Rust CLI for Docker, mods, backups, and world sync."
